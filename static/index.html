@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+
+<div id="app">
+
+    <head>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+       <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+       <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+       <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script><link rel="stylesheet" href="static/bootstrap.min.css">
+       <link rel="stylesheet" href="static/bootstrap.min.css">
+       <link rel="stylesheet" href="static/style.css">
+
+        <title>Full Bellies</title>
+    </head>
+
+    <body>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+            <a class="navbar-brand" href="#">Crock Pot Helper</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#mynavbar" aria-controls="mynavbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+              </button>
+            <div class="collapse navbar-collapse" id="mynavbar">
+                <ul class="navbar-nav mr-auto">
+                  <li class="nav-item active">
+                    <a class="nav-link" href="./">Home <span class="sr-only">(current)</span></a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="lookup">Lookup</a>
+                  </li>
+                </ul>
+              </div>
+        </nav>
+        <div v-cloak class="container-fluid">
+            <div class="row mt-2">
+                <div class="col-12">
+                    <!--given 4 ingredients, generate dish name and show benefits-->
+                    <div class="card">
+                        <div class="card-body">
+                          <h4 class="card-title">Cook</h4>
+                          <p class="card-text">
+                            <div class="row">
+                                <div class="col-3 d-flex align-items-stretch" v-for="i in 4" :key="i">
+                                    <div class="col-10 d-flex align-items-stretch">
+                                        <select v-model="cookingIngs[i-1]" class="form-control" tabindex="12"
+                                        @change="getDish(cookingIngs)">
+                                            <option v-for="(ing,ingIndex) in ingredients"
+                                                :key="ing.IngID"
+                                                :value="ing">
+                                                {{ ing.Name }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="col-2 d-flex align-items-stretch">
+                                        <h3 v-if="i==4">=</h3>
+                                        <h3 v-else>+</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <br>
+                            <div class="row">
+                                <div class="col-12 d-flex align-items-stretch">
+                                    <h4><span v-html="foundDish"></span></h4>
+                                </div>
+                            </div>
+                          </p>
+                        </div>
+                    </div>
+                    <br>
+                    <!--given dish name and less than 4 ingredients, generate the remaining ingredients-->
+                    <!--given a list of items, generate best dish name-->
+                    <div class="card">
+                        <div class="card-body">
+                          <h4 class="card-title">Optimize</h4>
+                          <p class="card-text">
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="row" v-for="(myinput,inputIndex) in bestRecipeInputs" :key="myinput">
+                                        <div class="col-5 d-flex align-items-stretch">
+                                            <select v-model="myinput.ing" class="form-control" tabindex="12">
+                                                <option v-for="(ing,ingIndex) in ingredients"
+                                                    :key="ing.IngID"
+                                                    :value="ing">
+                                                    {{ ing.Name }}
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div class="col-1 d-flex align-items-stretch">
+                                            <h3>x</h3>
+                                        </div>
+                                        <div class="col-4 d-flex align-items-stretch">
+                                            <input type="number" class="form-control"
+                                                :value="myinput.count" id="inputDefault">
+                                        </div>
+                                        <div class="col-1 d-flex align-items-stretch">
+                                            <button @click="removeInput(inputIndex)" class="btn btn-outline-secondary">Remove</button>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-11 d-flex align-items-stretch">
+                                            <button @click="addInput()" class="btn btn-outline-secondary">Add More</button>
+                                            <button @click="getBestRecipe(bestRecipeInputs)" class="btn btn-primary">Find Best Recipe</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div v-if="bestRecipes.length>0">
+                                        <div class="row" v-for="i in 3" :key="i">
+                                            <div class="col-4">
+                                                <h5>Best {{bestRecipes[i-1]['Type']}}: </h5>
+                                            </div>
+                                            <div class="col-8">
+                                                <div>
+                                                    {{bestRecipes[i-1]['Dish']['DishName']}}
+                                                    (+ {{bestRecipes[i-1]['Value']}})
+                                                </div>
+                                                <div>{{bestRecipes[i-1]['Dish']['IngNames'].join(', ')}} </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                         </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    const apiURL = 'http://pandabear.pythonanywhere.com';
+    //defaults in optimize section
+    const bestRecipeInputDefaultNames = ['Twigs','Berries']
+    const bestRecipeInputDefaultCount =10
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            ingredients: [],
+            recipes: [],
+            dishes: [],
+            //in inspect section
+            selectedIng: '',
+            //in cook section
+            cookingIngs: Array(4),
+            foundDish: '',
+            //in optimize section
+            bestRecipeInputs: [],
+            bestRecipes: [],
+        },
+        created: function () {
+            this.initAllIngredients();
+        },
+        methods: {
+            initAllIngredients: function () {
+                axios.get(apiURL+'/all_ingredients')
+                    .then(function (res) {
+                        vm.ingredients = res.data
+                        for (let i = 0; i < res.data.length; i++) {
+                            if(bestRecipeInputDefaultNames.indexOf(res.data[i]['Name'])>=0) {
+                                vm.bestRecipeInputs.push({'ing':res.data[i], 'count': bestRecipeInputDefaultCount})
+                            }
+                        }
+                    });
+            },
+            getDish: function (ingredients) {
+                ingIDs = []
+                benefits_direct = [0,0,0]
+                for (let i = 0; i < 4; i++) {
+                    if(ingredients[i]){
+                        ingIDs.push(ingredients[i]['IngID'])
+                        benefits_direct=benefits_direct.map(function(v, j) {return v + ingredients[i]['Benefits'][j];})
+                    }
+                }
+                if(ingIDs.length==4) {
+                    axios.get(apiURL+'/get_recipe/'+ingIDs.join('&'))
+                    .then(function (res) {
+                        foundDishes = res.data
+                        vm.foundDish = ''
+                        for (let i = 0; i<foundDishes.length; i++) {
+                            vm.foundDish += (foundDishes[i].Dish + '<h5>[' +
+                                            'Health = ' + foundDishes[i].Benefits[0] + ', ' +
+                                            'Hunger = ' + foundDishes[i].Benefits[1] + ', ' +
+                                            'Sanity = ' + foundDishes[i].Benefits[2] + '] ' + '</h5><br>')
+                        }
+                        vm.foundDish += '<h5>Without cooking, you get <br>' +
+                                            'Health = ' + benefits_direct[0] + ', ' +
+                                            'Hunger = ' + benefits_direct[1] + ', ' +
+                                            'Sanity = ' + benefits_direct[2] + '</h5><br>'
+
+                    });
+                }
+            },
+            removeInput: function (index) {
+                this.bestRecipeInputs.splice(index, 1);
+            },
+            addInput: function () {
+                this.bestRecipeInputs.push({'ing':[],'count':1});
+            },
+            getBestRecipe: function(bestRecipeInputs) {
+                mystr = new Array(bestRecipeInputs.length);
+                for (let i = 0; i<bestRecipeInputs.length; i++) {
+                    mystr[i] = bestRecipeInputs[i]['ing']['IngID']+'='+bestRecipeInputs[i]['count']
+                }
+                axios.get(apiURL+'/get_best_recipe/'+mystr.join('&'))
+                .then(function (res) {
+                    vm.bestRecipes = res.data
+                })
+            },
+        },
+    });
+</script>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<div id="app">
+    <head>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+        <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script><link rel="stylesheet" href="static/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+        <link rel="stylesheet" href="static/bootstrap.min.css">
+        <link rel="stylesheet" href="static/style.css">
+    </head>
+    <body>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+            <a class="navbar-brand" href="#">Crock Pot Helper</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#mynavbar" aria-controls="mynavbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+              </button>
+            <div class="collapse navbar-collapse" id="mynavbar">
+                <ul class="navbar-nav mr-auto">
+                  <li class="nav-item active">
+                    <a class="nav-link" href="./">Home <span class="sr-only">(current)</span></a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="lookup">Lookup</a>
+                  </li>
+                </ul>
+              </div>
+        </nav>
+
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+                <a class="nav-link active" data-toggle="tab" href="#tabings">Ingredients</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#tabdishes">Dishes</a>
+            </li>
+        </ul>
+        <div v-cloak id="myTabContent" class="tab-content">
+            <div class="tab-pane fade active show" id="tabings">
+                <table id="ingsTable">
+                    <thead class="thead-light">
+                        <th>Name</th>
+                        <th>Health</th>
+                        <th>Hunger</th>
+                        <th>Sanity</th>
+                        <th>Info</th>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(ing, index) in ingredients" :key="ing.IngID">
+                            <td>{{ing.Name}}</td>
+                            <td>{{ing.Benefits[0]}}</td>
+                            <td>{{ing.Benefits[1]}}</td>
+                            <td>{{ing.Benefits[2]}}</td>
+                            <td>{{ing.Info}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="tab-pane fade" id="tabdishes">
+                <table id="dishesTable">
+                    <thead class="thead-light">
+                        <th>Name</th>
+                        <th>Health</th>
+                        <th>Hunger</th>
+                        <th>Sanity</th>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(d, index) in dishes" :key="d.DishID">
+                            <td>{{d.Dish}}</td>
+                            <td>{{d.Benefits[0]}}</td>
+                            <td>{{d.Benefits[1]}}</td>
+                            <td>{{d.Benefits[2]}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </body>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.0.slim.min.js" integrity="sha256-MlusDLJIP1GRgLrOflUQtshyP0TwT/RHXsI1wWGnQhs=" crossorigin="anonymous"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
+
+<script>
+    const apiURL = 'http://pandabear.pythonanywhere.com';
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            ingredients: [],
+            recipes: [],
+            dishes: [],
+            ingsTable: null,
+            recipesTable: null,
+            dishesTable: null,
+        },
+        created: function () {
+            this.getAllIngredients();
+            this.getAllDishes();
+        },
+        methods: {
+            getAllIngredients: function () {
+                axios.get(apiURL+'/all_ingredients')
+                    .then(function (res) {
+                        vm.ingredients = res.data;
+                        Vue.nextTick(function() {
+                            vm.ingsTable = $('#ingsTable').DataTable();
+                    });
+                    });
+            },
+
+            getAllDishes: function() {
+                axios.get(apiURL+'/all_dishes')
+                    .then(function (res) {
+                        vm.dishes = res.data;
+                        Vue.nextTick(function() {
+                            vm.dishesTable = $('#dishesTable').DataTable();
+                    });
+                    });
+            },
+        },
+    });
+</script>
